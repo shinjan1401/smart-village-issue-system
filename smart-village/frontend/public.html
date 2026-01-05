@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Village Public Issue Tracker</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: url("public_bg.jpg") no-repeat center center fixed;
+      background-size: cover;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+
+    .desc {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: white;
+    }
+
+    .Pending {
+      background: #e67e22;
+    }
+
+    .Waiting {
+      background: #3498db;
+    }
+
+    .Completed {
+      background: #27ae60;
+    }
+
+    .photo {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>🌍 Village Public Issue Tracker</h2>
+
+<div class="container" id="list"></div>
+
+<script>
+async function load(){
+  const r = await fetch("http://127.0.0.1:8000/issues");
+  const data = await r.json();
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  data.forEach(i => {
+    let cls = "Pending";
+    if(i.status.includes("Waiting")) cls = "Waiting";
+    if(i.status.includes("Completed")) cls = "Completed";
+
+    list.innerHTML += `
+      <div class="card">
+        <div class="desc"><b>📝 Issue:</b> ${i.desc}</div>
+        <div class="status ${cls}">${i.status}</div>
+
+        ${i.photo ? `
+          <img class="photo" 
+               src="http://127.0.0.1:8000/uploads/${encodeURIComponent(i.photo)}">
+        ` : ""}
+      </div>
+    `;
+  });
+}
+
+load();
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BDO Approval Portal</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: url("bdo_bg.jpg") no-repeat center center fixed;
+      background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .panel {
+      background: #ffffff;
+      width: 700px;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    h2 {
+      text-align: center;
+      color: #243b55;
+    }
+
+    .issue {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-top: 5px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background: #243b55;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="panel">
+  <h2>BDO Approval Panel</h2>
+  <div id="list"></div>
+</div>
+
+<script>
+async function load(){
+  const r = await fetch("http://127.0.0.1:8000/issues");
+  const data = await r.json();
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  data.forEach(i => {
+    if(i.status === "Waiting Approval"){
+      list.innerHTML += `
+        <div class="issue">
+          <b>Problem:</b> ${i.desc}<br><br>
+
+          <b>Before Work Photo:</b>
+          <img src="http://127.0.0.1:8000/uploads/${i.photo}">
+
+          <b>After Work Photo:</b>
+          <img src="http://127.0.0.1:8000/uploads/${i.after_photo}">
+
+          <button onclick="approve(${i.id})">Approve</button>
+        </div>
+      `;
+    }
+  });
+}
+
+async function approve(id){
+  await fetch(`http://127.0.0.1:8000/approve/${id}`, {
+    method: "POST"
+  });
+  load();
+}
+
+load();
+</script>
+
+</body>
+</html>
+

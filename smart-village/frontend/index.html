@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Village – Sachiv Portal</title>
+
+  <style>
+   body {
+     margin: 0;
+     height: 100vh;
+     font-family: Arial, sans-serif;
+     background: url("village_bg.jpg") no-repeat center center fixed;
+     background-size: cover;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+ }
+
+  .card {
+     background: rgba(255, 255, 255, 0.25);   /* transparent white */
+     backdrop-filter: blur(12px);            /* main blur effect */
+     -webkit-backdrop-filter: blur(12px);    /* Safari support */
+    
+     width: 400px;
+     padding: 25px;
+     border-radius: 15px;
+     box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+     text-align: center;
+     border: 1px solid rgba(255,255,255,0.4);
+  }
+
+    h2 {
+      margin-bottom: 10px;
+      color: #185a9d;
+    }
+
+    p {
+      font-size: 14px;
+      color: #555;
+    }
+
+    textarea {
+      width: 100%;
+      height: 80px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      font-size: 14px;
+      resize: none;
+      margin-top: 10px;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+    }
+
+    button {
+      margin-top: 15px;
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #43cea2;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #36b893;
+    }
+
+    ul {
+      margin-top: 20px;
+      padding: 0;
+      list-style: none;
+      text-align: left;
+    }
+
+    li {
+      background: #f2f2f2;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <h2>Gram Sachiv Portal</h2>
+    <p>Village problems yahan record karein</p>
+
+    <form id="f">
+      <textarea id="desc" placeholder="Problem yahan likhiye..." required></textarea>
+      <input type="file" id="photo" required>
+      <button type="submit">Submit Problem</button>
+    </form>
+
+    <ul id="list"></ul>
+  </div>
+
+<script>
+const f = document.getElementById("f");
+const desc = document.getElementById("desc");
+const photo = document.getElementById("photo");
+const list = document.getElementById("list");
+
+f.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const fd = new FormData();
+  fd.append("desc", desc.value);
+  fd.append("photo", photo.files[0]);
+
+  await fetch("http://127.0.0.1:8000/add", {
+    method: "POST",
+    body: fd
+  });
+
+  f.reset();
+  load();
+});
+
+async function load(){
+  const r = await fetch("http://127.0.0.1:8000/issues");
+  const data = await r.json();
+
+  list.innerHTML = "";
+data.forEach(i => {
+  list.innerHTML += `
+    <li>
+      <b>${i.desc}</b><br>
+      Status: ${i.status}<br>
+
+      ${i.status === "Pending" ? `
+        <input type="file" id="after_${i.id}" required><br>
+        <button onclick="complete(${i.id})">
+          Mark as Completed
+        </button>
+      ` : ""}
+    </li>
+  `;
+});
+}
+
+load();
+async function complete(id){
+  const fileInput = document.getElementById(`after_${id}`);
+
+  // 🔒 Safety check
+  if (!fileInput || fileInput.files.length === 0) {
+    alert("Please upload AFTER work photo first");
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append("photo", fileInput.files[0]);
+
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:8000/complete/${id}`,
+      {
+        method: "POST",
+        body: fd
+      }
+    );
+
+    if (!res.ok) {
+      alert("Backend error while completing issue");
+      return;
+    }
+
+    load(); // refresh list
+  } catch (err) {
+    alert("Backend connection error");
+    console.error(err);
+  }
+}
+</script>
+
+</body>
+</html>
+
